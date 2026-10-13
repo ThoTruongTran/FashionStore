@@ -44,3 +44,18 @@ public class ChangePasswordViewModel
     [Compare(nameof(NewPassword), ErrorMessage = "Mật khẩu nhập lại không khớp"), DataType(DataType.Password)]
     public string ConfirmPassword { get; set; } = "";
 }
+
+public class ForgotPasswordViewModel
+{
+    [Required(ErrorMessage = "Vui lòng nhập email"), EmailAddress(ErrorMessage = "Email không hợp lệ")]
+    public string Email { get; set; } = "";
+}
+
+public class ResetPasswordViewModel
+{
+    [Required] public string Token { get; set; } = "";
+    [Required(ErrorMessage = "Nhập mật khẩu mới"), StringLength(50, MinimumLength = 6, ErrorMessage = "Mật khẩu tối thiểu 6 ký tự"), DataType(DataType.Password)]
+    public string NewPassword { get; set; } = "";
+    [Compare(nameof(NewPassword), ErrorMessage = "Mật khẩu nhập lại không khớp"), DataType(DataType.Password)]
+    public string ConfirmPassword { get; set; } = "";
+}

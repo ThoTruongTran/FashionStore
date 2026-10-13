@@ -1,0 +1,42 @@
+﻿@model List<Review>
+@{
+    ViewData["Title"] = "Đánh giá"; var cur = (string?)ViewBag.Status;
+}
+<h1 class="h4 mb-3">Đánh giá sản phẩm</h1>
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link @(cur == null ? "active" : "")" asp-action="Index">Tất cả</a></li>
+    <li class="nav-item"><a class="nav-link @(cur == "approved" ? "active" : "")" asp-action="Index" asp-route-status="approved">Đang hiển thị</a></li>
+    <li class="nav-item"><a class="nav-link @(cur == "hidden" ? "active" : "")" asp-action="Index" asp-route-status="hidden">Đã ẩn</a></li>
+</ul>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th>Sản phẩm</th><th>Khách hàng</th><th>Sao</th><th>Nội dung</th><th>Ngày</th><th>Trạng thái</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>@r.Product?.Name</td>
+                        <td>@r.User?.FullName</td>
+                        <td class="text-warning text-nowrap">@for (int i = 1; i <= 5; i++) {
+                        <i class="bi @(i <= r.Rating ? "bi-star-fill" : "bi-star")"></i>
+                    }
+</td>
+                    <td class="small" style="max-width:300px">@r.Comment</td>
+                    <td class="small">@r.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td><span class="badge @(r.IsApproved ? "bg-success" : "bg-secondary")">@(r.IsApproved ? "Hiển thị" : "Đã ẩn")</span></td>
+                    <td class="text-end text-nowrap">
+                        <form asp-action="Toggle" asp-route-id="@r.Id" method="post" class="d-inline"><button class="btn btn-sm btn-outline-dark"><i class="bi @(r.IsApproved ? "bi-eye-slash" : "bi-eye")"></i></button></form>
+                        <form asp-action="Delete" asp-route-id="@r.Id" method="post" class="d-inline" onsubmit="return confirm('Xóa đánh giá này?')"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                    </td>
+                </tr>
+                                }
+            </tbody>
+        </table>
+    </div>
+</div>
+@if (!Model.Any())
+{
+    <p class="text-center text-muted mt-3">Chưa có đánh giá nào (khách sẽ viết đánh giá ở Phần 4)</p>
+}
+<partial name="_Pagination" model="(PagingInfo)ViewBag.Paging" />

@@ -1,0 +1,32 @@
+﻿@* Users/Create.cshtml *@
+@model AdminUserCreateViewModel
+@{
+    ViewData["Title"] = "Tạo tài khoản";
+}
+<h1 class="h4 mb-3">Tạo tài khoản mới</h1>
+<div class="card shadow-sm" style="max-width:600px">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3"><label asp-for="FullName" class="form-label">Họ tên</label><input asp-for="FullName" class="form-control" /><span asp-validation-for="FullName" class="text-danger small"></span></div>
+            <div class="mb-3"><label asp-for="Email" class="form-label">Email</label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger small"></span></div>
+            <div class="mb-3"><label asp-for="PhoneNumber" class="form-label">Số điện thoại</label><input asp-for="PhoneNumber" class="form-control" /><span asp-validation-for="PhoneNumber" class="text-danger small"></span></div>
+            <div class="mb-3"><label asp-for="Password" class="form-label">Mật khẩu</label><input asp-for="Password" class="form-control" /><span asp-validation-for="Password" class="text-danger small"></span></div>
+            <div class="mb-3">
+                <label asp-for="RoleId" class="form-label">Vai trò</label>
+                <select asp-for="RoleId" class="form-select">
+                    <option value="0">-- Chọn --</option>
+                    @foreach (var r in (List<Role>)ViewBag.Roles)
+                    {
+                        <option value="@r.Id">@r.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="RoleId" class="text-danger small"></span>
+            </div>
+            <button class="btn btn-dark">Tạo tài khoản</button> <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,30 @@
+﻿@* Categories/Index.cshtml *@
+@model List<Category>
+@{
+    ViewData["Title"] = "Danh mục"; var counts = (Dictionary<int, int>)ViewBag.ProductCounts;
+}
+<div class="d-flex justify-content-between mb-3"><h1 class="h4">Danh mục</h1><a asp-action="Create" class="btn btn-dark btn-sm"><i class="bi bi-plus-lg"></i> Thêm danh mục</a></div>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th>Tên</th><th>Slug</th><th>Số SP</th><th>Trạng thái</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>@(c.ParentCategoryId != null ? "— " : "")<span class="@(c.ParentCategoryId == null ? "fw-bold" : "")">@c.Name</span></td>
+                        <td class="text-muted small">@c.Slug</td>
+                        <td>@counts.GetValueOrDefault(c.Id)</td>
+                        <td><span class="badge @(c.IsActive ? "bg-success" : "bg-secondary")">@(c.IsActive ? "Hiển thị" : "Ẩn")</span></td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-dark" asp-action="Edit" asp-route-id="@c.Id"><i class="bi bi-pencil"></i></a>
+                            <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

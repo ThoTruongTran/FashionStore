@@ -143,3 +143,12 @@ D:\FashionStore\FashionStore\obj\Debug\net8.0\refint\FashionStore.dll
 D:\FashionStore\FashionStore\obj\Debug\net8.0\FashionStore.pdb
 D:\FashionStore\FashionStore\obj\Debug\net8.0\FashionStore.genruntimeconfig.cache
 D:\FashionStore\FashionStore\obj\Debug\net8.0\ref\FashionStore.dll
+D:\FashionStore\FashionStore\obj\Debug\net8.0\FashionStore.sourcelink.json
+D:\FashionStore\FashionStore\bin\Debug\net8.0\ClosedXML.dll
+D:\FashionStore\FashionStore\bin\Debug\net8.0\ClosedXML.Parser.dll
+D:\FashionStore\FashionStore\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+D:\FashionStore\FashionStore\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+D:\FashionStore\FashionStore\bin\Debug\net8.0\ExcelNumberFormat.dll
+D:\FashionStore\FashionStore\bin\Debug\net8.0\RBush.dll
+D:\FashionStore\FashionStore\bin\Debug\net8.0\SixLabors.Fonts.dll
+D:\FashionStore\FashionStore\bin\Debug\net8.0\System.IO.Packaging.dll

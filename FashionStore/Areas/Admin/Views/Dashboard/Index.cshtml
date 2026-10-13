@@ -1,10 +1,171 @@
-﻿@{
-    ViewData["Title"] = "Quản trị";
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = "Tổng quan"; var max = Model.Last7Days.Max(d => d.Revenue);
 }
-<h1 class="h3 mb-4">Trang quản trị</h1>
+<h1 class="h4 mb-4">Tổng quan</h1>
+
 <div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Sản phẩm</div><div class="display-6">@ViewBag.Products</div></div></div></div>
-    <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Đơn hàng</div><div class="display-6">@ViewBag.Orders</div></div></div></div>
-    <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Người dùng</div><div class="display-6">@ViewBag.Users</div></div></div></div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card shadow-sm border-0 border-start border-4 border-success">
+            <div class="card-body">
+                <div class="text-muted small">Doanh thu (đơn hoàn thành)</div><div class="h4 mb-0">@Model.TotalRevenue.ToVnd()</div>
+                <small class="text-muted">Tháng này: @Model.MonthRevenue.ToVnd()</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card shadow-sm border-0 border-start border-4 border-primary">
+            <div class="card-body">
+                <div class="text-muted small">Tổng đơn hàng</div><div class="h4 mb-0">@Model.TotalOrders</div>
+                <small class="text-danger">@Model.PendingOrders đơn chờ xác nhận</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card shadow-sm border-0 border-start border-4 border-warning">
+            <div class="card-body">
+                <div class="text-muted small">Sản phẩm</div><div class="h4 mb-0">@Model.TotalProducts</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card shadow-sm border-0 border-start border-4 border-info">
+            <div class="card-body">
+                <div class="text-muted small">Khách hàng</div><div class="h4 mb-0">@Model.TotalCustomers</div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="alert alert-info">Đăng nhập với vai trò <strong>@(User.IsInRole("Admin") ? "Admin" : "Staff")</strong>. Chức năng quản lý đầy đủ sẽ làm ở Phần 3.</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h2 class="h6 mb-0">Doanh thu 12 tháng gần nhất <small class="text-muted">(đơn hoàn thành)</small></h2>
+                                    <a class="btn btn-sm btn-success" asp-action="ExportRevenue"><i class="bi bi-file-earmark-excel"></i> Xuất Excel năm nay</a>
+                                </div>
+                                <canvas id="revChart" height="110"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h2 class="h6 mb-2">Tỉ lệ trạng thái đơn hàng</h2>
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h2 class="h6 mb-3">Doanh số 7 ngày gần nhất <small class="text-muted">(đơn không bị hủy)</small></h2>
+                @foreach (var d in Model.Last7Days)
+                {
+                    var pct = max == 0 ? 0 : (int)(d.Revenue * 100 / max);
+                    <div class="d-flex align-items-center mb-2">
+                        <div style="width:60px" class="small">@d.Date.ToString("dd/MM")</div>
+                        <div class="progress flex-grow-1" style="height:18px"><div class="progress-bar bg-dark" style="width:@pct%"></div></div>
+                        <div class="ms-2 small text-end" style="width:150px">@d.Revenue.ToVnd() (@d.Orders đơn)</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Đơn hàng theo trạng thái</h2>
+                <ul class="list-group list-group-flush">
+                    @foreach (var s in Model.OrdersByStatus)
+                    {
+                        <li class="list-group-item d-flex justify-content-between px-0">@s.Name<span class="badge bg-secondary">@s.Value</span></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Bán chạy nhất</h2>
+                @if (!Model.TopProducts.Any())
+                {
+                    <p class="text-muted small">Chưa có dữ liệu</p>
+                }
+                <ol class="ps-3 mb-0">
+                    @foreach (var t in Model.TopProducts)
+                    {
+                        <li class="mb-1">@t.Name <span class="badge bg-success float-end">@t.Value đã bán</span></li>
+                    }
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3 text-danger">Sắp hết hàng (≤ 5)</h2>
+                @if (!Model.LowStock.Any())
+                {
+                    <p class="text-muted small">Kho ổn định</p>
+                }
+                <ul class="list-unstyled mb-0 small">
+                    @foreach (var v in Model.LowStock)
+                    {
+                        <li class="mb-1">
+                            <a class="text-decoration-none" asp-controller="Products" asp-action="Edit" asp-route-id="@v.ProductId">@v.Product!.Name</a>
+                            (@v.Color!.Name/@v.Size!.Name) <span class="badge @(v.StockQuantity == 0 ? "bg-danger" : "bg-warning text-dark") float-end">@v.StockQuantity</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Đơn mới nhất</h2>
+                <ul class="list-unstyled mb-0 small">
+                    @foreach (var o in Model.RecentOrders)
+                    {
+                        <li class="mb-2">
+                            <a class="fw-semibold text-decoration-none" asp-controller="Orders" asp-action="Details" asp-route-id="@o.Id">@o.OrderCode</a>
+                            <span class="badge @o.Status.ToBadge() float-end">@o.Status.ToLabel()</span><br />
+                            <span class="text-muted">@o.ReceiverName - @o.TotalAmount.ToVnd()</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        new Chart(document.getElementById('revChart'), {
+            type: 'bar',
+            data: {
+                labels: @Json.Serialize(Model.MonthlyRevenue.Select(x => x.Name)),
+                datasets: [{ label: 'Doanh thu (₫)', data: @Json.Serialize(Model.MonthlyRevenue.Select(x => x.Value)), backgroundColor: '#212529' }]
+            },
+            options: { plugins: { legend: { display: false } },
+                       scales: { y: { ticks: { callback: v => v.toLocaleString('vi-VN') } } } }
+        });
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: @Json.Serialize(Model.OrdersByStatus.Select(x => x.Name)),
+                datasets: [{ data: @Json.Serialize(Model.OrdersByStatus.Select(x => x.Value)),
+                             backgroundColor: ['#ffc107', '#0dcaf0', '#0d6efd', '#198754', '#6c757d'] }]
+            }
+        });
+    </script>
+}

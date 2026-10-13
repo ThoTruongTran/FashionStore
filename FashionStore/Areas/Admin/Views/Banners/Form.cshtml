@@ -1,0 +1,30 @@
+﻿@* Banners/Form.cshtml *@
+@model Banner
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Thêm banner" : "Sửa banner";
+}
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<div class="card shadow-sm" style="max-width:650px">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="mb-3"><label asp-for="Title" class="form-label">Tiêu đề</label><input asp-for="Title" class="form-control" /><span asp-validation-for="Title" class="text-danger small"></span></div>
+            <div class="mb-3">
+                <label class="form-label">Ảnh banner (khuyên dùng tỉ lệ 3:1, ví dụ 1200x400)</label>
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <div class="mb-2"><img src="@Model.ImageUrl" class="img-fluid rounded" style="max-height:120px" alt="" /></div>
+                }
+                <input type="file" name="imageFile" accept="image/*" class="form-control mb-2" />
+                <input asp-for="ImageUrl" class="form-control" placeholder="hoặc dán đường dẫn ảnh" />
+            </div>
+            <div class="mb-3"><label asp-for="LinkUrl" class="form-label">Liên kết khi bấm vào</label><input asp-for="LinkUrl" class="form-control" placeholder="/Product" /></div>
+            <div class="mb-3"><label asp-for="SortOrder" class="form-label">Thứ tự hiển thị</label><input asp-for="SortOrder" class="form-control" /></div>
+            <div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Hiển thị</label></div>
+            <button class="btn btn-dark">Lưu</button> <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

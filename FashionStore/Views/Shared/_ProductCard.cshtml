@@ -4,13 +4,16 @@
               ?? "https://placehold.co/600x800?text=No+Image";
 }
 <div class="card product-card h-100 border-0 shadow-sm">
-    <a asp-area="" asp-controller="Product" asp-action="Details" asp-route-slug="@Model.Slug" class="position-relative overflow-hidden">
-        <img src="@img" class="card-img-top" alt="@Model.Name" loading="lazy" />
+    <div class="position-relative overflow-hidden">
+        <a asp-area="" asp-controller="Product" asp-action="Details" asp-route-slug="@Model.Slug">
+            <img src="@img" class="card-img-top" alt="@Model.Name" loading="lazy" />
+        </a>
         @if (Model.DiscountPercent > 0)
         {
             <span class="badge bg-danger position-absolute top-0 start-0 m-2">-@Model.DiscountPercent%</span>
         }
-    </a>
+        <button type="button" class="wish-btn" data-id="@Model.Id" title="Yêu thích"><i class="bi bi-heart"></i></button>
+    </div>
     <div class="card-body">
         <small class="text-muted">@Model.Brand?.Name</small>
         <h6 class="card-title mb-2">

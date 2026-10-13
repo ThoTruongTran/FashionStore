@@ -91,8 +91,14 @@
                         </div>
                     }
                     <hr />
+                    <div class="input-group input-group-sm mb-1">
+                        <input asp-for="CouponCode" class="form-control text-uppercase" placeholder="Mã giảm giá" autocomplete="off" />
+                        <button type="button" id="applyCoupon" class="btn btn-outline-dark">Áp dụng</button>
+                    </div>
+                    <div id="couponMsg" class="small mb-2"></div>
                     <div class="d-flex justify-content-between"><span>Tạm tính</span><span>@Model.Cart.Total.ToVnd()</span></div>
                     <div class="d-flex justify-content-between"><span>Phí vận chuyển</span><span id="shipFee">0₫</span></div>
+                    <div id="discountRow" class="d-flex justify-content-between text-success d-none"><span>Giảm giá</span><span id="discountVal">-0₫</span></div>
                     <hr />
                     <div class="d-flex justify-content-between fs-5 fw-bold"><span>Tổng cộng</span><span id="grandTotal" class="text-danger"></span></div>
                     <button class="btn btn-dark w-100 mt-3">Đặt hàng</button>
@@ -107,14 +113,39 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         const subTotal = @((long)Model.Cart.Total);
+        let discount = 0;
         const fmt = n => n.toLocaleString('vi-VN') + '₫';
+
         function updateTotal() {
             const r = document.querySelector('.ship-opt:checked');
             const fee = r ? +r.dataset.fee : 0;
             document.getElementById('shipFee').textContent = fmt(fee);
-            document.getElementById('grandTotal').textContent = fmt(subTotal + fee);
+            document.getElementById('discountRow').classList.toggle('d-none', discount === 0);
+            document.getElementById('discountVal').textContent = '-' + fmt(discount);
+            document.getElementById('grandTotal').textContent = fmt(Math.max(0, subTotal + fee - discount));
         }
+
+        async function applyCoupon() {
+            const code = document.getElementById('CouponCode').value;
+            const msg = document.getElementById('couponMsg');
+            const res = await fetch('@Url.Action("ApplyCoupon", "Checkout")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: 'code=' + encodeURIComponent(code)
+            });
+            const d = await res.json();
+            discount = d.ok ? d.discount : 0;
+            msg.className = 'small mb-2 ' + (d.ok ? 'text-success' : 'text-danger');
+            msg.textContent = d.message;
+            updateTotal();
+        }
+
         document.querySelectorAll('.ship-opt').forEach(r => r.addEventListener('change', updateTotal));
+        document.getElementById('applyCoupon').addEventListener('click', applyCoupon);
+        if (document.getElementById('CouponCode').value) applyCoupon();   // giữ mã khi form bị trả lại do lỗi
         updateTotal();
     </script>
 }

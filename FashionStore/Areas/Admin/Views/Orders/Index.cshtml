@@ -1,0 +1,59 @@
+﻿@model List<Order>
+@{
+    ViewData["Title"] = "Đơn hàng";
+    var counts = (Dictionary<OrderStatus, int>)ViewBag.StatusCounts;
+    OrderStatus? cur = ViewBag.Status;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Đơn hàng</h1>
+    <a class="btn btn-success btn-sm" asp-action="Export" asp-route-keyword="@ViewBag.Keyword" asp-route-status="@cur"
+       asp-route-fromDate="@(((DateTime?)ViewBag.FromDate)?.ToString("yyyy-MM-dd"))"
+       asp-route-toDate="@(((DateTime?)ViewBag.ToDate)?.ToString("yyyy-MM-dd"))">
+        <i class="bi bi-file-earmark-excel"></i> Xuất Excel (theo bộ lọc)
+    </a>
+</div>
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link @(cur == null ? "active" : "")" asp-action="Index">Tất cả (@counts.Values.Sum())</a></li>
+    @foreach (var s in Enum.GetValues<OrderStatus>())
+    {
+        <li class="nav-item"><a class="nav-link @(cur == s ? "active" : "")" asp-action="Index" asp-route-status="@s">@s.ToLabel() (@counts.GetValueOrDefault(s))</a></li>
+    }
+</ul>
+<form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="status" value="@cur" />
+    <div class="col-md-4"><input name="keyword" value="@ViewBag.Keyword" class="form-control form-control-sm" placeholder="Mã đơn, tên hoặc SĐT người nhận..." /></div>
+    <div class="col-md-3"><input type="date" name="fromDate" value="@(((DateTime?)ViewBag.FromDate)?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" /></div>
+    <div class="col-md-3"><input type="date" name="toDate" value="@(((DateTime?)ViewBag.ToDate)?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" /></div>
+    <div class="col-md-2"><button class="btn btn-sm btn-dark w-100">Lọc</button></div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th>Mã đơn</th><th>Ngày đặt</th><th>Người nhận</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    var pay = o.Payments.FirstOrDefault();
+                    <tr>
+                        <td class="fw-semibold">@o.OrderCode</td>
+                        <td>@o.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@o.ReceiverName<br /><small class="text-muted">@o.ReceiverPhone</small></td>
+                        <td>@o.TotalAmount.ToVnd()</td>
+                        <td>@if (pay != null) {
+                        <span class="badge @pay.Status.ToBadge()">@pay.Status.ToLabel()</span>
+                    }
+</td>
+                    <td><span class="badge @o.Status.ToBadge()">@o.Status.ToLabel()</span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-dark" asp-action="Details" asp-route-id="@o.Id">Xử lý</a></td>
+                </tr>
+                                }
+            </tbody>
+        </table>
+    </div>
+</div>
+@if (!Model.Any())
+{
+    <p class="text-center text-muted mt-3">Không có đơn hàng nào</p>
+}
+<partial name="_Pagination" model="(PagingInfo)ViewBag.Paging" />

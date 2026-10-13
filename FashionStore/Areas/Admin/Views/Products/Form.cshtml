@@ -1,0 +1,117 @@
+﻿@model Product
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Thêm sản phẩm" : "Sửa sản phẩm";
+}
+<div class="d-flex justify-content-between mb-3"><h1 class="h4">@ViewData["Title"]</h1><a asp-action="Index" class="btn btn-sm btn-outline-secondary">← Danh sách</a></div>
+
+<form method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="All" class="alert alert-danger"></div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-8"><label asp-for="Name" class="form-label">Tên sản phẩm</label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger small"></span></div>
+                <div class="col-md-4">
+                    <label asp-for="Gender" class="form-label">Giới tính</label>
+                    <select asp-for="Gender" class="form-select"><option>Unisex</option><option>Nam</option><option>Nữ</option></select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="CategoryId" class="form-label">Danh mục</label>
+                    <select asp-for="CategoryId" asp-items="(SelectList)ViewBag.Categories" class="form-select"><option value="0">-- Chọn --</option></select><span asp-validation-for="CategoryId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="BrandId" class="form-label">Thương hiệu</label>
+                    <select asp-for="BrandId" asp-items="(SelectList)ViewBag.Brands" class="form-select"><option value="0">-- Chọn --</option></select><span asp-validation-for="BrandId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4"><label asp-for="Material" class="form-label">Chất liệu</label><input asp-for="Material" class="form-control" /></div>
+                <div class="col-md-4"><label asp-for="BasePrice" class="form-label">Giá gốc (₫)</label><input asp-for="BasePrice" type="number" step="any" min="0" class="form-control" /><span asp-validation-for="BasePrice" class="text-danger small"></span></div>
+                <div class="col-md-4"><label asp-for="DiscountPercent" class="form-label">Giảm giá (%)</label><input asp-for="DiscountPercent" type="number" min="0" max="100" class="form-control" /><span asp-validation-for="DiscountPercent" class="text-danger small"></span></div>
+                <div class="col-md-4 d-flex align-items-end"><div class="form-check"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Hiển thị trên website</label></div></div>
+                <div class="col-12"><label asp-for="Description" class="form-label">Mô tả</label><textarea asp-for="Description" class="form-control" rows="4"></textarea></div>
+                <div class="col-12">
+                    <label class="form-label">@(isNew ? "Hình ảnh (chọn nhiều ảnh, ảnh đầu tiên là ảnh chính)" : "Thêm ảnh mới")</label>
+                    <input type="file" name="newImages" accept="image/*" multiple class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-dark mb-4"><i class="bi bi-save"></i> Lưu sản phẩm</button>
+</form>
+
+@if (!isNew)
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h6 mb-3">Hình ảnh (@Model.Images.Count)</h2>
+            @if (!Model.Images.Any())
+            {
+                <p class="text-muted small mb-0">Chưa có ảnh. Hãy chọn ảnh ở form phía trên rồi bấm Lưu.</p>
+            }
+            <div class="d-flex flex-wrap gap-3">
+                @foreach (var im in Model.Images.OrderBy(i => i.SortOrder))
+                {
+                    <div class="text-center">
+                        <img src="@im.ImageUrl" class="admin-thumb rounded @(im.IsMain ? "border border-3 border-success" : "")" alt="" />
+                        <div class="mt-1 d-flex gap-1 justify-content-center align-items-center">
+                            @if (im.IsMain)
+                            {
+                                <span class="badge bg-success">Ảnh chính</span>
+                            }
+                            else
+                            {
+                                <form asp-action="SetMainImage" asp-route-id="@im.Id" method="post"><button class="btn btn-sm btn-outline-success" title="Đặt làm ảnh chính"><i class="bi bi-star"></i></button></form>
+                            }
+                            <form asp-action="DeleteImage" asp-route-id="@im.Id" method="post" onsubmit="return confirm('Xóa ảnh này?')"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h6 mb-1">Biến thể (màu / size / tồn kho)</h2>
+            <p class="text-muted small">Mỗi tổ hợp màu + size là một biến thể có tồn kho riêng. <strong>Cần ít nhất 1 biến thể còn hàng thì khách mới mua được.</strong> Cột "+Giá" là phụ thu thêm so với giá bán.</p>
+            @foreach (var v in Model.Variants.OrderBy(v => v.Color!.Name).ThenBy(v => v.Size!.SortOrder))
+            {
+                <form asp-action="UpdateVariant" asp-route-id="@v.Id" method="post" class="row g-2 align-items-center border-bottom py-2">
+                    <div class="col-md-3"><span class="swatch" style="background:@v.Color!.HexCode"></span>@v.Color.Name / <strong>@v.Size!.Name</strong><small class="text-muted d-block">@v.Sku</small></div>
+                    <div class="col-md-3"><div class="input-group input-group-sm"><span class="input-group-text">Tồn</span><input name="stockQuantity" type="number" min="0" value="@v.StockQuantity" class="form-control" /></div></div>
+                    <div class="col-md-3"><div class="input-group input-group-sm"><span class="input-group-text">+Giá</span><input name="extraPrice" type="number" step="any" value="@((long)v.ExtraPrice)" class="form-control" /></div></div>
+                    <div class="col-md-3 text-end">
+                        <button class="btn btn-sm btn-outline-dark">Lưu</button>
+                        <button type="submit" formaction="@Url.Action("DeleteVariant", new { id = v.Id })" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa biến thể này?')"><i class="bi bi-trash"></i></button>
+                    </div>
+                </form>
+            }
+            <form asp-action="AddVariant" method="post" class="row g-2 align-items-center pt-3">
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <div class="col-md-3">
+                    <select name="colorId" class="form-select form-select-sm">
+                        <option value="0">-- Màu --</option>
+                        @foreach (var c in (List<Color>)ViewBag.Colors)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sizeId" class="form-select form-select-sm">
+                        <option value="0">-- Size --</option>
+                        @foreach (var s in (List<Size>)ViewBag.Sizes)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2"><input name="stockQuantity" type="number" min="0" value="10" class="form-control form-control-sm" title="Tồn kho" /></div>
+                <div class="col-md-2"><input name="extraPrice" type="number" step="any" value="0" class="form-control form-control-sm" title="Phụ thu" /></div>
+                <div class="col-md-3"><button class="btn btn-sm btn-dark w-100"><i class="bi bi-plus-lg"></i> Thêm biến thể</button></div>
+            </form>
+        </div>
+    </div>
+}
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

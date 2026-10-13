@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100" data-auth="@(User.Identity?.IsAuthenticated == true ? "true" : "false")">
+    <form id="afForm" class="d-none">@Html.AntiForgeryToken()</form>
     <header class="sticky-top bg-white shadow-sm">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
@@ -26,6 +27,7 @@
                         <button class="btn btn-sm btn-dark"><i class="bi bi-search"></i></button>
                     </form>
                     <ul class="navbar-nav align-items-lg-center">
+                        <li class="nav-item"><a class="nav-link" asp-area="" asp-controller="Wishlist" asp-action="Index" title="Yêu thích"><i class="bi bi-heart fs-5"></i></a></li>
                         <li class="nav-item">@await Component.InvokeAsync("CartCount")</li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -33,6 +35,7 @@
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> @User.Identity.Name</a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Profile">Thông tin cá nhân</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Wishlist" asp-action="Index">Sản phẩm yêu thích</a></li>
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Order" asp-action="Index">Đơn hàng của tôi</a></li>
                                     @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
                                     {

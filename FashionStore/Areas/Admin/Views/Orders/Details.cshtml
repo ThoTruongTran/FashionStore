@@ -1,0 +1,117 @@
+﻿@model Order
+@{
+    ViewData["Title"] = "Đơn " + Model.OrderCode;
+    var next = Model.Status.NextStatuses();
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Đơn @Model.OrderCode <span class="badge @Model.Status.ToBadge() ms-2">@Model.Status.ToLabel()</span></h1>
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">← Danh sách</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-3">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light"><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th class="text-end">Thành tiền</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in Model.Details)
+                        {
+                            <tr><td>@d.ProductName</td><td>@d.UnitPrice.ToVnd()</td><td>@d.Quantity</td><td class="text-end">@((d.Quantity * d.UnitPrice).ToVnd())</td></tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr><td colspan="3" class="text-end">Tạm tính</td><td class="text-end">@Model.SubTotal.ToVnd()</td></tr>
+                        <tr><td colspan="3" class="text-end">Phí vận chuyển</td><td class="text-end">@Model.ShippingFee.ToVnd()</td></tr>
+                        @if (Model.DiscountAmount > 0)
+                        {
+                            <tr><td colspan="3" class="text-end">Giảm giá</td><td class="text-end text-success">-@Model.DiscountAmount.ToVnd()</td></tr>
+                        }
+                        <tr class="fw-bold"><td colspan="3" class="text-end">Tổng cộng</td><td class="text-end text-danger">@Model.TotalAmount.ToVnd()</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Lịch sử trạng thái</h2>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var h in Model.StatusHistories.OrderByDescending(h => h.ChangedAt))
+                    {
+                        <li class="mb-1">
+                            <span class="badge @h.Status.ToBadge()">@h.Status.ToLabel()</span>
+                            <small class="text-muted ms-2">@h.ChangedAt.ToString("dd/MM/yyyy HH:mm") - @(h.ChangedByUser?.FullName ?? "Hệ thống")@(h.Note != null ? ": " + h.Note : "")</small>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h6">Cập nhật trạng thái</h2>
+                @if (next.Any())
+                {
+                    <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post">
+                        <textarea name="note" class="form-control form-control-sm mb-2" rows="2" placeholder="Ghi chú (tùy chọn)"></textarea>
+                        @foreach (var s in next)
+                        {
+                            <button name="status" value="@s" class="btn btn-sm @(s == OrderStatus.Cancelled ? "btn-outline-danger" : "btn-dark") me-1 mb-1"
+                                    onclick="@(s == OrderStatus.Cancelled ? "return confirm('Hủy đơn và hoàn lại tồn kho?')" : "return true")">
+                                → @s.ToLabel()
+                            </button>
+                        }
+                    </form>
+                }
+                else
+                {
+
+                    <p class="text-muted small mb-0">Đơn đã ở trạng thái cuối, không thể chuyển tiếp.</p>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h6">Khách hàng &amp; giao hàng</h2>
+                <p class="mb-1"><strong>@Model.ReceiverName</strong> - @Model.ReceiverPhone</p>
+                <p class="small text-muted mb-1">@Model.ShippingAddress</p>
+                <p class="small mb-1">Tài khoản: @Model.User?.Email</p>
+                <p class="small mb-1">Vận chuyển: @Model.ShippingMethod?.Name</p>
+                @if (!string.IsNullOrEmpty(Model.Note))
+                {
+                    <p class="small mb-0">Ghi chú của khách: @Model.Note</p>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Thanh toán</h2>
+                @foreach (var pay in Model.Payments)
+                {
+                    <p class="small mb-2">
+                        @pay.PaymentMethod?.Name: <span class="badge @pay.Status.ToBadge()">@pay.Status.ToLabel()</span>
+                        @if (pay.PaidAt != null)
+                        {
+                            <span class="text-muted"> lúc @pay.PaidAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        }
+                    </p>
+                    <form asp-action="UpdatePayment" asp-route-id="@Model.Id" method="post" class="d-flex gap-1">
+                        <input type="hidden" name="paymentId" value="@pay.Id" />
+                        <select name="status" class="form-select form-select-sm">
+                            @foreach (var s in Enum.GetValues<PaymentStatus>())
+                            {
+                                <option value="@s" selected="@(s == pay.Status)">@s.ToLabel()</option>
+                            }
+                        </select>
+                        <button class="btn btn-sm btn-outline-dark">Lưu</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+﻿@* Brands/Form.cshtml *@
+@model Brand
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Thêm thương hiệu" : "Sửa thương hiệu";
+}
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<div class="card shadow-sm" style="max-width:600px">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="mb-3"><label asp-for="Name" class="form-label">Tên thương hiệu</label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger small"></span></div>
+            <div class="mb-3"><label asp-for="Description" class="form-label">Mô tả</label><textarea asp-for="Description" class="form-control" rows="3"></textarea></div>
+            <div class="mb-3">
+                <label class="form-label">Logo</label>
+                @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                {
+                    <div class="mb-2"><img src="@Model.LogoUrl" style="height:50px" alt="" /></div>
+                }
+                <input type="file" name="logoFile" accept="image/*" class="form-control mb-2" />
+                <input asp-for="LogoUrl" class="form-control" placeholder="hoặc dán đường dẫn ảnh" />
+            </div>
+            <button class="btn btn-dark">Lưu</button> <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

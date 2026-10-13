@@ -8,7 +8,13 @@ public class AccountController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly IPasswordHasher<AppUser> _hasher;
-    public AccountController(ApplicationDbContext db, IPasswordHasher<AppUser> hasher) { _db = db; _hasher = hasher; }
+    private readonly IPasswordResetService _reset;
+    private readonly IEmailService _email;
+    private readonly IWebHostEnvironment _env;
+
+    public AccountController(ApplicationDbContext db, IPasswordHasher<AppUser> hasher,
+        IPasswordResetService reset, IEmailService email, IWebHostEnvironment env)
+    { _db = db; _hasher = hasher; _reset = reset; _email = email; _env = env; }
 
     [HttpGet]
     public IActionResult Login(string? returnUrl) => View(new LoginViewModel { ReturnUrl = returnUrl });
@@ -124,5 +130,55 @@ public class AccountController : Controller
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = remember });
+    }
+
+    [HttpGet] public IActionResult ForgotPassword() => View(new ForgotPasswordViewModel());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel vm)
+    {
+        if (!ModelState.IsValid) return View(vm);
+        var email = vm.Email.Trim().ToLower();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
+        if (user != null)
+        {
+            var token = _reset.CreateToken(user);
+            var link = Url.Action("ResetPassword", "Account", new { token }, Request.Scheme)!;
+            var body = $"<p>Xin chào {System.Net.WebUtility.HtmlEncode(user.FullName)},</p>" +
+                       $"<p>Bấm vào liên kết sau để đặt lại mật khẩu (có hiệu lực 30 phút):</p><p><a href=\"{link}\">{link}</a></p>" +
+                       "<p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>";
+            var sent = await _email.SendAsync(user.Email, "Đặt lại mật khẩu FashionStore", body);
+            if (!sent && _env.IsDevelopment()) TempData["DevLink"] = link;   // chỉ khi dev và chưa cấu hình SMTP
+        }
+        // Luôn trả lời giống nhau để không lộ email nào đã đăng ký
+        TempData["Success"] = "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.";
+        return RedirectToAction(nameof(ForgotPassword));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ResetPassword(string token)
+    {
+        if (await _reset.ValidateAsync(token ?? "") == null)
+        {
+            TempData["Error"] = "Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+        return View(new ResetPasswordViewModel { Token = token! });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel vm)
+    {
+        if (!ModelState.IsValid) return View(vm);
+        var user = await _reset.ValidateAsync(vm.Token);
+        if (user == null)
+        {
+            TempData["Error"] = "Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+        user.PasswordHash = _hasher.HashPassword(user, vm.NewPassword);   // token cũ tự vô hiệu
+        await _db.SaveChangesAsync();
+        TempData["Success"] = "Đặt lại mật khẩu thành công, hãy đăng nhập bằng mật khẩu mới.";
+        return RedirectToAction(nameof(Login));
     }
 }

@@ -54,6 +54,10 @@
                 @foreach (var pay in Model.Payments)
                 {
                     <p class="small mb-1">Thanh toán: @pay.PaymentMethod?.Name (@pay.Status.ToLabel())</p>
+                    @if (Model.Status == OrderStatus.Pending && pay.Status != PaymentStatus.Paid && pay.PaymentMethod!.Name.Contains("VNPay"))
+                    {
+                        <a class="btn btn-sm btn-success mb-2" asp-controller="Payment" asp-action="Pay" asp-route-orderId="@Model.Id">Thanh toán VNPay</a>
+                    }
                 }
                 @if (!string.IsNullOrEmpty(Model.Note))
                 {

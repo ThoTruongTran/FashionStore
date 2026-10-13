@@ -1,0 +1,73 @@
+﻿@inject FashionStore.Data.ApplicationDbContext Db
+@{
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Active(string c) => ctrl == c ? "active" : "";
+    var pending = await Db.Orders.CountAsync(o => o.Status == OrderStatus.Pending);
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản trị FashionStore</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="d-flex">
+        <aside class="admin-sidebar p-3 d-none d-md-block flex-shrink-0">
+            <a class="d-block text-white text-decoration-none fw-bold fs-5 mb-4" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                FASHION<span class="text-danger">STORE</span> <small class="d-block fs-6 fw-normal text-secondary">Quản trị</small>
+            </a>
+            <ul class="nav flex-column">
+                <li><a class="nav-link @Active("Dashboard")" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i>Tổng quan</a></li>
+                <li>
+                    <a class="nav-link @Active("Orders")" asp-area="Admin" asp-controller="Orders" asp-action="Index">
+                        <i class="bi bi-receipt me-2"></i>Đơn hàng
+                        @if (pending > 0)
+                        {
+                            <span class="badge bg-danger ms-1">@pending</span>
+                        }
+                    </a>
+                </li>
+                <li><a class="nav-link @Active("Products")" asp-area="Admin" asp-controller="Products" asp-action="Index"><i class="bi bi-box-seam me-2"></i>Sản phẩm</a></li>
+                <li><a class="nav-link @Active("Categories")" asp-area="Admin" asp-controller="Categories" asp-action="Index"><i class="bi bi-diagram-3 me-2"></i>Danh mục</a></li>
+                <li><a class="nav-link @Active("Brands")" asp-area="Admin" asp-controller="Brands" asp-action="Index"><i class="bi bi-award me-2"></i>Thương hiệu</a></li>
+                <li><a class="nav-link @Active("Attributes")" asp-area="Admin" asp-controller="Attributes" asp-action="Index"><i class="bi bi-palette me-2"></i>Màu &amp; Size</a></li>
+                <li><a class="nav-link @Active("Banners")" asp-area="Admin" asp-controller="Banners" asp-action="Index"><i class="bi bi-images me-2"></i>Banner</a></li>
+                <li><a class="nav-link @Active("Reviews")" asp-area="Admin" asp-controller="Reviews" asp-action="Index"><i class="bi bi-star me-2"></i>Đánh giá</a></li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li><a class="nav-link @Active("Users")" asp-area="Admin" asp-controller="Users" asp-action="Index"><i class="bi bi-people me-2"></i>Người dùng</a></li>
+                }
+            </ul>
+            <hr class="border-secondary" />
+            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-shop me-2"></i>Xem website</a>
+        </aside>
+
+        <div class="flex-grow-1 min-vw-0">
+            <nav class="navbar bg-white border-bottom px-4">
+                <span class="text-muted">Xin chào, <strong>@User.Identity?.Name</strong> <span class="badge bg-dark">@(User.IsInRole("Admin") ? "Admin" : "Staff")</span></span>
+                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="ms-auto">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-box-arrow-right"></i> Đăng xuất</button>
+                </form>
+            </nav>
+            <main class="p-4">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

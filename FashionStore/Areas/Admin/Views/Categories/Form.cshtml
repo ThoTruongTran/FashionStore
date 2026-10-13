@@ -1,0 +1,23 @@
+﻿@* Categories/Form.cshtml *@
+@model Category
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Thêm danh mục" : "Sửa danh mục";
+}
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<div class="card shadow-sm" style="max-width:600px">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="mb-3"><label asp-for="Name" class="form-label">Tên danh mục</label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger small"></span></div>
+            <div class="mb-3">
+                <label asp-for="ParentCategoryId" class="form-label">Danh mục cha</label>
+                <select asp-for="ParentCategoryId" asp-items="(SelectList)ViewBag.Parents" class="form-select"><option value="">— Không (danh mục gốc) —</option></select>
+            </div>
+            <div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Hiển thị trên website</label></div>
+            <button class="btn btn-dark">Lưu</button> <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

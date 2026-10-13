@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Màu & Size";
+    var colors = (List<Color>)ViewBag.Colors; var sizes = (List<Size>)ViewBag.Sizes;
+}
+<h1 class="h4 mb-3">Màu sắc &amp; Kích cỡ</h1>
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Màu sắc</h2>
+                <form asp-action="AddColor" method="post" class="row g-2 mb-3">
+                    <div class="col"><input name="name" class="form-control form-control-sm" placeholder="Tên màu" required /></div>
+                    <div class="col-auto"><input type="color" name="hexCode" value="#000000" class="form-control form-control-color form-control-sm" /></div>
+                    <div class="col-auto"><button class="btn btn-sm btn-dark">Thêm</button></div>
+                </form>
+                <ul class="list-group list-group-flush">
+                    @foreach (var c in colors)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span><span class="swatch" style="background:@c.HexCode"></span>@c.Name <small class="text-muted">@c.HexCode</small></span>
+                            <form asp-action="DeleteColor" asp-route-id="@c.Id" method="post" onsubmit="return confirm('Xóa màu này?')"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Kích cỡ</h2>
+                <form asp-action="AddSize" method="post" class="row g-2 mb-3">
+                    <div class="col"><input name="name" class="form-control form-control-sm" placeholder="Tên size (VD: XXL, 42)" required /></div>
+                    <div class="col-3"><input type="number" name="sortOrder" value="@(sizes.Count + 1)" class="form-control form-control-sm" title="Thứ tự" /></div>
+                    <div class="col-auto"><button class="btn btn-sm btn-dark">Thêm</button></div>
+                </form>
+                <ul class="list-group list-group-flush">
+                    @foreach (var s in sizes)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>@s.Name <small class="text-muted">(thứ tự @s.SortOrder)</small></span>
+                            <form asp-action="DeleteSize" asp-route-id="@s.Id" method="post" onsubmit="return confirm('Xóa size này?')"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

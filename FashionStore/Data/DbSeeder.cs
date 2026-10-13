@@ -79,7 +79,39 @@ public static class DbSeeder
                 });
             await db.SaveChangesAsync();
         }
+        // Phương thức VNPay (thêm riêng để DB cũ cũng có)
+        if (!await db.PaymentMethods.AnyAsync(p => p.Name.Contains("VNPay")))
+        {
+            db.PaymentMethods.Add(new PaymentMethod { Name = "Thanh toán online VNPay (sandbox)" });
+            await db.SaveChangesAsync();
+        }
 
+        // Mã giảm giá mẫu
+        if (!await db.Coupons.AnyAsync())
+        {
+            db.Coupons.AddRange(
+                new Coupon
+                {
+                    Code = "WELCOME10",
+                    DiscountType = DiscountType.Percent,
+                    DiscountValue = 10,
+                    MinOrderAmount = 200000,
+                    MaxUsage = 100,
+                    StartDate = DateTime.Today.AddDays(-1),
+                    EndDate = DateTime.Today.AddYears(1)
+                },
+                new Coupon
+                {
+                    Code = "GIAM50K",
+                    DiscountType = DiscountType.FixedAmount,
+                    DiscountValue = 50000,
+                    MinOrderAmount = 500000,
+                    MaxUsage = 50,
+                    StartDate = DateTime.Today.AddDays(-1),
+                    EndDate = DateTime.Today.AddYears(1)
+                });
+            await db.SaveChangesAsync();
+        }
         await SeedCatalogAsync(db);
     }
 

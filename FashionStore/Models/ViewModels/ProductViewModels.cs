@@ -40,4 +40,6 @@ public class ProductDetailViewModel
     public List<Color> Colors { get; set; } = new();
     public List<Size> Sizes { get; set; } = new();
     public double AvgRating { get; set; }
+    public bool CanReview { get; set; }
+    public Review? MyReview { get; set; }
 }

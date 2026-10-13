@@ -15,7 +15,10 @@
 
 <div class="row g-4 mb-5">
     <div class="col-md-6">
-        <img id="mainImg" src="@mainImg" class="img-fluid rounded w-100 mb-2" alt="@p.Name" />
+        <div class="position-relative mb-2">
+            <img id="mainImg" src="@mainImg" class="img-fluid rounded w-100" alt="@p.Name" />
+            <button type="button" class="wish-btn" data-id="@p.Id" title="Yêu thích"><i class="bi bi-heart"></i></button>
+        </div>
         <div class="d-flex gap-2">
             @foreach (var im in images)
             {
@@ -95,6 +98,41 @@
 
 <section class="mb-5">
     <h2 class="h5 section-title">Đánh giá của khách hàng</h2>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        if (Model.CanReview)
+        {
+            var my = Model.MyReview;
+            <form asp-controller="Review" asp-action="Create" method="post" class="card card-body shadow-sm mb-3">
+                <h3 class="h6">@(my == null ? "Viết đánh giá của bạn" : "Cập nhật đánh giá của bạn")</h3>
+                <input type="hidden" name="productId" value="@p.Id" />
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <select name="rating" class="form-select">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <option value="@i" selected="@((my?.Rating ?? 5) == i)">@i sao</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-9"><textarea name="comment" class="form-control" rows="2" maxlength="1000" placeholder="Chia sẻ cảm nhận về sản phẩm...">@my?.Comment</textarea></div>
+                </div>
+                <div class="mt-2">
+                    <button class="btn btn-dark btn-sm">Gửi đánh giá</button>
+                    @if (my != null)
+                    {
+                        <button type="submit" formaction="@Url.Action("Delete", "Review")" class="btn btn-outline-danger btn-sm" onclick="return confirm('Xóa đánh giá của bạn?')">Xóa</button>
+                    }
+                </div>
+            </form>
+        }
+        else
+        {
+            <p class="text-muted small">Chỉ khách đã mua và nhận hàng thành công mới có thể đánh giá sản phẩm này.</p>
+        }
+    }
+
     @if (!p.Reviews.Any())
     {
         <p class="text-muted">Chưa có đánh giá nào.</p>

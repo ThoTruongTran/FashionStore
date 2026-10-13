@@ -1,0 +1,60 @@
+﻿@* Users/Index.cshtml *@
+@model List<AppUser>
+@{
+    ViewData["Title"] = "Người dùng";
+    var roles = (List<Role>)ViewBag.Roles; int me = ViewBag.CurrentUserId; int? roleFilter = ViewBag.RoleId;
+}
+<div class="d-flex justify-content-between mb-3"><h1 class="h4">Người dùng &amp; phân quyền</h1><a asp-action="Create" class="btn btn-dark btn-sm"><i class="bi bi-person-plus"></i> Tạo tài khoản</a></div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-5"><input name="keyword" value="@ViewBag.Keyword" class="form-control form-control-sm" placeholder="Tên, email, SĐT..." /></div>
+    <div class="col-md-3">
+        <select name="roleId" class="form-select form-select-sm">
+            <option value="">Tất cả vai trò</option>
+            @foreach (var r in roles)
+            {
+                <option value="@r.Id" selected="@(roleFilter == r.Id)">@r.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2"><button class="btn btn-sm btn-dark w-100">Lọc</button></div>
+</form>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th>Họ tên</th><th>Email</th><th>SĐT</th><th>Ngày tạo</th><th style="width:170px">Vai trò</th><th>Trạng thái</th></tr></thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    var isSelf = u.Id == me;
+                    <tr>
+                        <td class="fw-semibold">@u.FullName @if (isSelf) {
+                        <span class="badge bg-info text-dark">Bạn</span>
+                    }
+</td>
+                    <td>@u.Email</td>
+                    <td>@u.PhoneNumber</td>
+                    <td class="small">@u.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <form asp-action="ChangeRole" asp-route-id="@u.Id" method="post">
+                            <select name="roleId" class="form-select form-select-sm" disabled="@isSelf" onchange="this.form.submit()">
+                                @foreach (var r in roles)
+                                {
+                                    <option value="@r.Id" selected="@(r.Id == u.RoleId)">@r.Name</option>
+                                }
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <form asp-action="ToggleActive" asp-route-id="@u.Id" method="post">
+                            <button class="btn btn-sm @(u.IsActive ? "btn-outline-success" : "btn-outline-danger")" disabled="@isSelf">
+                                <i class="bi @(u.IsActive ? "bi-unlock" : "bi-lock")"></i> @(u.IsActive ? "Hoạt động" : "Đã khóa")
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<partial name="_Pagination" model="(PagingInfo)ViewBag.Paging" />

@@ -1,0 +1,23 @@
+﻿@model PaymentResultViewModel
+@{
+    ViewData["Title"] = "Kết quả thanh toán";
+}
+<div class="text-center py-5">
+    @if (Model.Success)
+    {
+        <i class="bi bi-check-circle-fill text-success display-1"></i>
+    }
+    else
+    {
+
+        <i class="bi bi-x-circle-fill text-danger display-1"></i>
+    }
+    <h1 class="h3 mt-3">@(Model.Success ? "Thanh toán thành công" : "Thanh toán chưa thành công")</h1>
+    @if (Model.OrderCode != null)
+    {
+        <p>Mã đơn hàng: <strong>@Model.OrderCode</strong></p>
+    }
+    <p class="text-muted">@Model.Message</p>
+    <a class="btn btn-dark me-2" asp-controller="Order" asp-action="Index">Đơn hàng của tôi</a>
+    <a class="btn btn-outline-dark" asp-controller="Home" asp-action="Index">Về trang chủ</a>
+</div>

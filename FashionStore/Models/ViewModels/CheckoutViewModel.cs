@@ -16,6 +16,8 @@ public class CheckoutViewModel
     [Range(1, int.MaxValue, ErrorMessage = "Chọn phương thức thanh toán")] public int PaymentMethodId { get; set; }
     public bool SaveAddress { get; set; }
 
+    [StringLength(50)] public string? CouponCode { get; set; }
+
     [ValidateNever] public Cart Cart { get; set; } = new();
     [ValidateNever] public List<ShippingMethod> ShippingMethods { get; set; } = new();
     [ValidateNever] public List<PaymentMethod> PaymentMethods { get; set; } = new();

@@ -88,6 +88,13 @@ public class ProductController : Controller
                 .Where(p => p.IsActive && p.CategoryId == product.CategoryId && p.Id != product.Id)
                 .Take(4).ToListAsync()
         };
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var uid = User.GetUserId();
+            vm.CanReview = await _db.OrderDetails.AnyAsync(d =>
+                d.ProductVariant!.ProductId == product.Id && d.Order!.UserId == uid && d.Order.Status == OrderStatus.Completed);
+            vm.MyReview = await _db.Reviews.FirstOrDefaultAsync(r => r.ProductId == product.Id && r.UserId == uid);
+        }
         return View(vm);
     }
 }

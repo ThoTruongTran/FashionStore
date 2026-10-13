@@ -27,4 +27,20 @@ public static class StatusHelper
         PaymentStatus.Refunded => "Đã hoàn tiền",
         _ => s.ToString()
     };
+
+    public static OrderStatus[] NextStatuses(this OrderStatus s) => s switch
+    {
+        OrderStatus.Pending => new[] { OrderStatus.Confirmed, OrderStatus.Cancelled },
+        OrderStatus.Confirmed => new[] { OrderStatus.Shipping, OrderStatus.Cancelled },
+        OrderStatus.Shipping => new[] { OrderStatus.Completed },
+        _ => Array.Empty<OrderStatus>()
+    };
+
+    public static string ToBadge(this PaymentStatus s) => s switch
+    {
+        PaymentStatus.Paid => "bg-success",
+        PaymentStatus.Failed => "bg-danger",
+        PaymentStatus.Refunded => "bg-info text-dark",
+        _ => "bg-warning text-dark"
+    };
 }
