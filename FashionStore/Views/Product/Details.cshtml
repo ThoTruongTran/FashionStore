@@ -1,0 +1,167 @@
+﻿@model ProductDetailViewModel
+@{
+    var p = Model.Product;
+    ViewData["Title"] = p.Name;
+    var images = p.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.SortOrder).ToList();
+    var mainImg = images.FirstOrDefault()?.ImageUrl ?? "https://placehold.co/600x800?text=No+Image";
+}
+<nav>
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Product" asp-action="Index" asp-route-categoryId="@p.CategoryId">@p.Category?.Name</a></li>
+        <li class="breadcrumb-item active">@p.Name</li>
+    </ol>
+</nav>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <img id="mainImg" src="@mainImg" class="img-fluid rounded w-100 mb-2" alt="@p.Name" />
+        <div class="d-flex gap-2">
+            @foreach (var im in images)
+            {
+                <img src="@im.ImageUrl" class="thumb rounded" alt="" onclick="document.getElementById('mainImg').src=this.src" />
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <small class="text-muted">@p.Brand?.Name</small>
+        <h1 class="h3">@p.Name</h1>
+        <div class="mb-2">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <i class="bi @(i <= Math.Round(Model.AvgRating) ? "bi-star-fill" : "bi-star") text-warning"></i>
+            }
+            <small class="text-muted ms-1">(@p.Reviews.Count đánh giá)</small>
+        </div>
+        <div class="mb-3">
+            <span id="priceNow" class="h3 text-danger fw-bold">@p.SalePrice.ToVnd()</span>
+            @if (p.DiscountPercent > 0)
+            {
+                <del class="text-muted ms-2">@p.BasePrice.ToVnd()</del>
+                <span class="badge bg-danger ms-1">-@p.DiscountPercent%</span>
+            }
+        </div>
+
+        <form id="addForm" asp-controller="Cart" asp-action="Add" method="post">
+            <input type="hidden" name="variantId" id="variantId" />
+            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+            <div class="mb-3">
+                <div class="fw-semibold mb-1">Màu sắc</div>
+                @foreach (var c in Model.Colors)
+                {
+                    <input type="radio" class="btn-check color-input" name="colorId" id="color@(c.Id)" value="@c.Id" autocomplete="off" />
+                    <label class="btn btn-outline-dark btn-sm me-1" for="color@(c.Id)"><span class="swatch" style="background:@c.HexCode"></span>@c.Name</label>
+                }
+            </div>
+            <div class="mb-3">
+                <div class="fw-semibold mb-1">Kích cỡ</div>
+                @foreach (var s in Model.Sizes)
+                {
+                    <input type="radio" class="btn-check size-input" name="sizeId" id="size@(s.Id)" value="@s.Id" autocomplete="off" />
+                    <label class="btn btn-outline-dark btn-sm me-1" for="size@(s.Id)">@s.Name</label>
+                }
+            </div>
+            <div class="mb-3 d-flex align-items-center gap-3">
+                <input type="number" id="qty" name="quantity" value="1" min="1" max="99" class="form-control" style="width:90px" />
+                <small id="stockInfo" class="text-muted">Vui lòng chọn màu và size</small>
+            </div>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <button id="addBtn" class="btn btn-dark btn-lg w-100" disabled><i class="bi bi-bag-plus"></i> Thêm vào giỏ hàng</button>
+            }
+            else
+            {
+                <a class="btn btn-dark btn-lg w-100" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">Đăng nhập để mua hàng</a>
+            }
+        </form>
+
+        <hr />
+        <dl class="row small mb-0">
+            <dt class="col-4">Chất liệu</dt>
+            <dd class="col-8">@(p.Material ?? "—")</dd>
+            <dt class="col-4">Giới tính</dt>
+            <dd class="col-8">@(p.Gender ?? "—")</dd>
+        </dl>
+    </div>
+</div>
+
+<section class="mb-5">
+    <h2 class="h5 section-title">Mô tả sản phẩm</h2>
+    <p>@p.Description</p>
+</section>
+
+<section class="mb-5">
+    <h2 class="h5 section-title">Đánh giá của khách hàng</h2>
+    @if (!p.Reviews.Any())
+    {
+        <p class="text-muted">Chưa có đánh giá nào.</p>
+    }
+    @foreach (var r in p.Reviews.OrderByDescending(r => r.CreatedAt))
+    {
+        <div class="border-bottom py-2">
+            <strong>@r.User?.FullName</strong>
+            <span class="ms-2">@for (int i = 1; i <= 5; i++) {
+            <i class="bi @(i <= r.Rating ? "bi-star-fill" : "bi-star") text-warning small"></i>
+        }
+</span>
+        <small class="text-muted ms-2">@r.CreatedAt.ToString("dd/MM/yyyy")</small>
+        <p class="mb-0">@r.Comment</p>
+    </div>
+        }
+</section>
+
+@if (Model.Related.Any())
+{
+    <section>
+        <h2 class="h5 section-title">Sản phẩm liên quan</h2>
+        <div class="row g-3">
+            @foreach (var rp in Model.Related)
+            {
+                <div class="col-6 col-md-3"><partial name="_ProductCard" model="rp" /></div>
+            }
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            const variants = @Json.Serialize(p.Variants.Select(v => new { id = v.Id, colorId = v.ColorId, sizeId = v.SizeId, stock = v.StockQuantity, price = p.SalePrice + v.ExtraPrice }));
+            const colors = [...document.querySelectorAll('.color-input')];
+            const sizes = [...document.querySelectorAll('.size-input')];
+            const variantInput = document.getElementById('variantId');
+            const btn = document.getElementById('addBtn');
+            const info = document.getElementById('stockInfo');
+            const priceEl = document.getElementById('priceNow');
+            const qty = document.getElementById('qty');
+            const fmt = n => n.toLocaleString('vi-VN') + '₫';
+            const picked = list => { const x = list.find(i => i.checked); return x ? +x.value : null; };
+
+            function update() {
+                const c = picked(colors);
+                sizes.forEach(s => {                       // vô hiệu hóa size hết hàng với màu đang chọn
+                    const ok = variants.some(v => v.sizeId === +s.value && (c === null || v.colorId === c) && v.stock > 0);
+                    s.disabled = !ok;
+                    if (!ok && s.checked) s.checked = false;
+                });
+                const sz = picked(sizes);
+                const v = (c !== null && sz !== null) ? variants.find(x => x.colorId === c && x.sizeId === sz) : null;
+                variantInput.value = v ? v.id : '';
+                if (btn) btn.disabled = !v;
+                if (v) {
+                    info.textContent = 'Còn ' + v.stock + ' sản phẩm';
+                    qty.max = v.stock;
+                    if (+qty.value > v.stock) qty.value = v.stock;
+                    priceEl.textContent = fmt(v.price);
+                } else {
+                    info.textContent = 'Vui lòng chọn màu và size';
+                }
+            }
+            colors.concat(sizes).forEach(i => i.addEventListener('change', update));
+            update();
+        })();
+    </script>
+}

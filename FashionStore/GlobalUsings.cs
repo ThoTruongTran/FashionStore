@@ -1,0 +1,12 @@
+﻿global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using System.Security.Claims;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.EntityFrameworkCore;
+global using FashionStore.Data;
+global using FashionStore.Helpers;
+global using FashionStore.Models.Entities;
+global using FashionStore.Models.Enums;
+global using FashionStore.Models.ViewModels;
+global using FashionStore.Services.Interfaces;

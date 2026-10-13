@@ -1,0 +1,10 @@
+﻿@{
+    ViewData["Title"] = "Quản trị";
+}
+<h1 class="h3 mb-4">Trang quản trị</h1>
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Sản phẩm</div><div class="display-6">@ViewBag.Products</div></div></div></div>
+    <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Đơn hàng</div><div class="display-6">@ViewBag.Orders</div></div></div></div>
+    <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Người dùng</div><div class="display-6">@ViewBag.Users</div></div></div></div>
+</div>
+<div class="alert alert-info">Đăng nhập với vai trò <strong>@(User.IsInRole("Admin") ? "Admin" : "Staff")</strong>. Chức năng quản lý đầy đủ sẽ làm ở Phần 3.</div>

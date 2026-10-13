@@ -1,0 +1,32 @@
+﻿@model List<Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+<h1 class="h3 mb-4">Đơn hàng của tôi</h1>
+@if (!Model.Any())
+{
+    <p class="text-muted">Bạn chưa có đơn hàng nào. <a asp-controller="Product" asp-action="Index">Mua sắm ngay</a></p>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light"><tr><th>Mã đơn</th><th>Ngày đặt</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var o in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@o.OrderCode</td>
+                            <td>@o.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@o.TotalAmount.ToVnd()</td>
+                            <td><span class="badge @o.Status.ToBadge()">@o.Status.ToLabel()</span></td>
+                            <td><a class="btn btn-sm btn-outline-dark" asp-action="Details" asp-route-id="@o.Id">Chi tiết</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <partial name="_Pagination" model="(PagingInfo)ViewBag.Paging" />
+}

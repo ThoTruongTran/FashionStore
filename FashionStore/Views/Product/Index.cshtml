@@ -1,0 +1,85 @@
+﻿@model ProductListViewModel
+@{
+    ViewData["Title"] = "Sản phẩm";
+    var f = Model.Filter;
+    var parents = Model.Categories.Where(c => c.ParentCategoryId == null).ToList();
+}
+<div class="row g-4">
+    <aside class="col-lg-3">
+        <form id="filterForm" method="get" class="card card-body shadow-sm">
+            <h2 class="h6 mb-3"><i class="bi bi-funnel"></i> Bộ lọc</h2>
+            <div class="mb-3">
+                <label class="form-label small">Từ khóa</label>
+                <input name="keyword" value="@f.Keyword" class="form-control form-control-sm" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Danh mục</label>
+                <select name="categoryId" class="form-select form-select-sm">
+                    <option value="">Tất cả</option>
+                    @foreach (var p in parents)
+                    {
+                        <option value="@p.Id" selected="@(f.CategoryId == p.Id)">@p.Name</option>
+                        foreach (var c in Model.Categories.Where(x => x.ParentCategoryId == p.Id))
+                        {
+                            <option value="@c.Id" selected="@(f.CategoryId == c.Id)">— @c.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Thương hiệu</label>
+                <select name="brandId" class="form-select form-select-sm">
+                    <option value="">Tất cả</option>
+                    @foreach (var b in Model.Brands)
+                    {
+                        <option value="@b.Id" selected="@(f.BrandId == b.Id)">@b.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Giới tính</label>
+                <select name="gender" class="form-select form-select-sm">
+                    <option value="">Tất cả</option>
+                    <option value="Nam" selected="@(f.Gender == "Nam")">Nam</option>
+                    <option value="Nữ" selected="@(f.Gender == "Nữ")">Nữ</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Khoảng giá (₫)</label>
+                <div class="input-group input-group-sm">
+                    <input type="number" name="minPrice" value="@f.MinPrice" min="0" class="form-control" placeholder="Từ" />
+                    <input type="number" name="maxPrice" value="@f.MaxPrice" min="0" class="form-control" placeholder="Đến" />
+                </div>
+            </div>
+            <button class="btn btn-dark btn-sm w-100 mb-2">Áp dụng</button>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm w-100">Xóa lọc</a>
+        </form>
+    </aside>
+
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">@Model.TotalCount sản phẩm</span>
+            <select name="sort" form="filterForm" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                <option value="">Mới nhất</option>
+                <option value="price_asc" selected="@(f.Sort == "price_asc")">Giá tăng dần</option>
+                <option value="price_desc" selected="@(f.Sort == "price_desc")">Giá giảm dần</option>
+                <option value="name" selected="@(f.Sort == "name")">Tên A-Z</option>
+            </select>
+        </div>
+
+        @if (!Model.Products.Any())
+        {
+            <div class="text-center text-muted py-5"><i class="bi bi-emoji-frown fs-1"></i><p class="mt-2">Không tìm thấy sản phẩm phù hợp</p></div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var p in Model.Products)
+                {
+                    <div class="col-6 col-md-4"><partial name="_ProductCard" model="p" /></div>
+                }
+            </div>
+            <partial name="_Pagination" model="Model.Paging" />
+        }
+    </div>
+</div>

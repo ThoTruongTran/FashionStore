@@ -1,0 +1,16 @@
+﻿@model PagingInfo
+@if (Model.TotalPages > 1)
+{
+    var baseQuery = Context.Request.Query.Where(q => q.Key != "page")
+        .SelectMany(q => q.Value, (q, v) => new KeyValuePair<string, string?>(q.Key, v)).ToList();
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                var q = new List<KeyValuePair<string, string?>>(baseQuery) { new("page", i.ToString()) };
+                var href = Context.Request.Path + QueryString.Create(q);
+                <li class="page-item @(i == Model.Page ? "active" : "")"><a class="page-link" href="@href">@i</a></li>
+            }
+        </ul>
+    </nav>
+}

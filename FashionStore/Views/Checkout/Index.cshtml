@@ -1,0 +1,120 @@
+﻿@model CheckoutViewModel
+@{
+    ViewData["Title"] = "Thanh toán";
+}
+<h1 class="h3 mb-4">Thanh toán</h1>
+
+<form asp-action="Index" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">Thông tin nhận hàng</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="ReceiverName" class="form-label">Họ tên người nhận</label>
+                            <input asp-for="ReceiverName" class="form-control" /><span asp-validation-for="ReceiverName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ReceiverPhone" class="form-label">Số điện thoại</label>
+                            <input asp-for="ReceiverPhone" class="form-control" /><span asp-validation-for="ReceiverPhone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Province" class="form-label">Tỉnh/Thành phố</label>
+                            <input asp-for="Province" class="form-control" /><span asp-validation-for="Province" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="District" class="form-label">Quận/Huyện</label>
+                            <input asp-for="District" class="form-control" /><span asp-validation-for="District" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Ward" class="form-label">Phường/Xã</label>
+                            <input asp-for="Ward" class="form-control" /><span asp-validation-for="Ward" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="StreetDetail" class="form-label">Số nhà, tên đường</label>
+                            <input asp-for="StreetDetail" class="form-control" /><span asp-validation-for="StreetDetail" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Note" class="form-label">Ghi chú (tùy chọn)</label>
+                            <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12 form-check ms-2">
+                            <input asp-for="SaveAddress" class="form-check-input" />
+                            <label asp-for="SaveAddress" class="form-check-label">Lưu địa chỉ này cho lần sau</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">Phương thức giao hàng</h2>
+                    @foreach (var m in Model.ShippingMethods)
+                    {
+                        <div class="form-check mb-1">
+                            <input class="form-check-input ship-opt" type="radio" name="ShippingMethodId" id="ship@(m.Id)" value="@m.Id"
+                                   data-fee="@((long)m.Fee)" checked="@(m.Id == Model.ShippingMethodId)" />
+                            <label class="form-check-label" for="ship@(m.Id)">@m.Name - @m.Fee.ToVnd() <small class="text-muted">(dự kiến @m.EstimatedDays ngày)</small></label>
+                        </div>
+                    }
+                    <span asp-validation-for="ShippingMethodId" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">Phương thức thanh toán</h2>
+                    @foreach (var m in Model.PaymentMethods)
+                    {
+                        <div class="form-check mb-1">
+                            <input class="form-check-input" type="radio" name="PaymentMethodId" id="pay@(m.Id)" value="@m.Id" checked="@(m.Id == Model.PaymentMethodId)" />
+                            <label class="form-check-label" for="pay@(m.Id)">@m.Name</label>
+                        </div>
+                    }
+                    <span asp-validation-for="PaymentMethodId" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">Đơn hàng (@Model.Cart.Items.Sum(i => i.Quantity) sản phẩm)</h2>
+                    @foreach (var item in Model.Cart.Items)
+                    {
+                        var v = item.ProductVariant!;
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span>@v.Product!.Name <span class="text-muted">(@v.Color?.Name/@v.Size?.Name) x@(item.Quantity)</span></span>
+                            <span>@((item.Quantity * v.FinalPrice).ToVnd())</span>
+                        </div>
+                    }
+                    <hr />
+                    <div class="d-flex justify-content-between"><span>Tạm tính</span><span>@Model.Cart.Total.ToVnd()</span></div>
+                    <div class="d-flex justify-content-between"><span>Phí vận chuyển</span><span id="shipFee">0₫</span></div>
+                    <hr />
+                    <div class="d-flex justify-content-between fs-5 fw-bold"><span>Tổng cộng</span><span id="grandTotal" class="text-danger"></span></div>
+                    <button class="btn btn-dark w-100 mt-3">Đặt hàng</button>
+                    <a class="btn btn-link w-100" asp-controller="Cart" asp-action="Index">← Quay lại giỏ hàng</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const subTotal = @((long)Model.Cart.Total);
+        const fmt = n => n.toLocaleString('vi-VN') + '₫';
+        function updateTotal() {
+            const r = document.querySelector('.ship-opt:checked');
+            const fee = r ? +r.dataset.fee : 0;
+            document.getElementById('shipFee').textContent = fmt(fee);
+            document.getElementById('grandTotal').textContent = fmt(subTotal + fee);
+        }
+        document.querySelectorAll('.ship-opt').forEach(r => r.addEventListener('change', updateTotal));
+        updateTotal();
+    </script>
+}

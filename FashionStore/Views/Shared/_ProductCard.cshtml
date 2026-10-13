@@ -1,0 +1,25 @@
+﻿@model Product
+@{
+    var img = Model.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.SortOrder).FirstOrDefault()?.ImageUrl
+              ?? "https://placehold.co/600x800?text=No+Image";
+}
+<div class="card product-card h-100 border-0 shadow-sm">
+    <a asp-area="" asp-controller="Product" asp-action="Details" asp-route-slug="@Model.Slug" class="position-relative overflow-hidden">
+        <img src="@img" class="card-img-top" alt="@Model.Name" loading="lazy" />
+        @if (Model.DiscountPercent > 0)
+        {
+            <span class="badge bg-danger position-absolute top-0 start-0 m-2">-@Model.DiscountPercent%</span>
+        }
+    </a>
+    <div class="card-body">
+        <small class="text-muted">@Model.Brand?.Name</small>
+        <h6 class="card-title mb-2">
+            <a class="text-dark text-decoration-none" asp-area="" asp-controller="Product" asp-action="Details" asp-route-slug="@Model.Slug">@Model.Name</a>
+        </h6>
+        <span class="fw-bold text-danger">@Model.SalePrice.ToVnd()</span>
+        @if (Model.DiscountPercent > 0)
+        {
+            <del class="text-muted small ms-1">@Model.BasePrice.ToVnd()</del>
+        }
+    </div>
+</div>

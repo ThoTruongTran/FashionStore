@@ -1,0 +1,80 @@
+﻿@model Order
+@{
+    ViewData["Title"] = "Đơn hàng " + Model.OrderCode;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Đơn hàng @Model.OrderCode <span class="badge @Model.Status.ToBadge() ms-2">@Model.Status.ToLabel()</span></h1>
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">← Danh sách</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-3">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light"><tr><th>Sản phẩm</th><th>Đơn giá</th><th>SL</th><th class="text-end">Thành tiền</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in Model.Details)
+                        {
+                            <tr>
+                                <td><a class="text-dark text-decoration-none" asp-controller="Product" asp-action="Details" asp-route-slug="@d.ProductVariant?.Product?.Slug">@d.ProductName</a></td>
+                                <td>@d.UnitPrice.ToVnd()</td>
+                                <td>@d.Quantity</td>
+                                <td class="text-end">@((d.Quantity * d.UnitPrice).ToVnd())</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Lịch sử trạng thái</h2>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var h in Model.StatusHistories.OrderByDescending(h => h.ChangedAt))
+                    {
+                        <li class="mb-1">
+                            <span class="badge @h.Status.ToBadge()">@h.Status.ToLabel()</span>
+                            <small class="text-muted ms-2">@h.ChangedAt.ToString("dd/MM/yyyy HH:mm") @(h.Note != null ? "- " + h.Note : "")</small>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h6">Thông tin giao hàng</h2>
+                <p class="mb-1"><strong>@Model.ReceiverName</strong> - @Model.ReceiverPhone</p>
+                <p class="small text-muted">@Model.ShippingAddress</p>
+                <p class="small mb-1">Giao hàng: @Model.ShippingMethod?.Name</p>
+                @foreach (var pay in Model.Payments)
+                {
+                    <p class="small mb-1">Thanh toán: @pay.PaymentMethod?.Name (@pay.Status.ToLabel())</p>
+                }
+                @if (!string.IsNullOrEmpty(Model.Note))
+                {
+                    <p class="small">Ghi chú: @Model.Note</p>
+                }
+                <hr />
+                <div class="d-flex justify-content-between"><span>Tạm tính</span><span>@Model.SubTotal.ToVnd()</span></div>
+                <div class="d-flex justify-content-between"><span>Phí vận chuyển</span><span>@Model.ShippingFee.ToVnd()</span></div>
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="d-flex justify-content-between text-success"><span>Giảm giá</span><span>-@Model.DiscountAmount.ToVnd()</span></div>
+                }
+                <div class="d-flex justify-content-between fw-bold fs-5 mt-2"><span>Tổng</span><span class="text-danger">@Model.TotalAmount.ToVnd()</span></div>
+
+                @if (Model.Status == OrderStatus.Pending)
+                {
+                    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="mt-3" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn này?')">
+                        <button class="btn btn-outline-danger w-100">Hủy đơn hàng</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
